@@ -9,13 +9,10 @@ router.get('/home', async (req, res, next) => {
 	const url1 = 'https://makeup-api.herokuapp.com/api/v1/products.json?product_tags=Vegan'
 	const url2 = 'http://makeup-api.herokuapp.com/api/v1/products.json?price_less_than=10'
 	const url3 = 'http://makeup-api.herokuapp.com/api/v1/products.json?price_greater_than=20'
-	// console.log(url);
+	
 	//use superagent to request api data
 
-	// also get products from db
-
-
-	// let veganProducts, drugstoreProducts, luxuryProducts;
+	// also get products from db that user has added
 
 	superagent
 	.get(url1)
@@ -23,7 +20,7 @@ router.get('/home', async (req, res, next) => {
 		const veganProducts = response.body.map(product => ({
 			brand:product.brand,
 		  	name: product.name,
-		  	category: product.category,
+		  	category: 'vegan',
 		  	price: product.price,
 		  	imageLink: product.image_link,
 		  	description: product.description,
@@ -31,13 +28,14 @@ router.get('/home', async (req, res, next) => {
 		  	createdAt: product.created_at,
 		  	productColors: product.product_colors	  	
 		}))
+
 		superagent
 		.get(url2)
 		.end((error, response) => {
 			const drugstoreProducts = response.body.map(product => ({
 				brand:product.brand,
 			  	name: product.name,
-			  	category: product.category,
+			  	category: 'drugstore',
 			  	price: product.price,
 			  	imageLink: product.image_link,
 			  	description: product.description,
@@ -51,7 +49,7 @@ router.get('/home', async (req, res, next) => {
 				const luxuryProducts = response.body.map(product => ({
 					brand:product.brand,
 				  	name: product.name,
-				  	category: product.category,
+				  	category: 'luxury',
 				  	price: product.price,
 				  	imageLink: product.image_link,
 				  	description: product.description,
@@ -61,22 +59,19 @@ router.get('/home', async (req, res, next) => {
 				}))
 				
 
+				// get user-added products from db
+
 				res.json([veganProducts, drugstoreProducts, luxuryProducts])
+				// {
+				// 	veganProducts: veganProducts, etc,
+					// drugstore
+					// luxuryProducts
+					// user
+				// }
 			})
 		})
 
 	})
-
-
-	// try {
-	// 	const products = await superagent......
-	// 	const vegan = await superagent.....
-
-	    
-	// } catch(err){
-	//   next(err);
-	// }
-
 
 
 })
@@ -88,7 +83,7 @@ router.get('/vegan', (req, res, next) => {
 	//use superagent to request api data
 
 
-	// also get products from db
+	// also get vegan user-added products from db
 
 	superagent
 	.get(url)
@@ -96,7 +91,7 @@ router.get('/vegan', (req, res, next) => {
 		const products = response.body.map(product => ({
 			brand:product.brand,
 		  	name: product.name,
-		  	category: product.category,
+		  	category: 'vegan',
 		  	price: product.price,
 		  	imageLink: product.image_link,
 		  	description: product.description,
@@ -115,7 +110,7 @@ router.get('/drugstore', (req, res, next) => {
 	// console.log(url);
 	//use superagent to request api data
 
-	// also get products from db
+	// also get user-added drugstore products from db
 
 	superagent
 	.get(url)
@@ -123,7 +118,7 @@ router.get('/drugstore', (req, res, next) => {
 		const products = response.body.map(product => ({
 			brand:product.brand,
 		  	name: product.name,
-		  	category: product.category,
+		  	category: 'drugstore',
 		  	price: product.price,
 		  	imageLink: product.image_link,
 		  	description: product.description,
@@ -142,14 +137,14 @@ router.get('/luxury', (req, res, next) => {
 	//use superagent to request api data
 
 
-	// also get products from db
+	// also get user-added luxury products from db
 	superagent
 	.get(url)
 	.end((error, response) => {
 		const products = response.body.map(product => ({
 			brand:product.brand,
 		  	name: product.name,
-		  	category: product.category,
+		  	category: 'luxury',
 		  	price: product.price,
 		  	imageLink: product.image_link,
 		  	description: product.description,
@@ -157,7 +152,7 @@ router.get('/luxury', (req, res, next) => {
 		  	createdAt: product.created_at,
 		  	productColors: product.product_colors	  	
 		}))
-		res.send(products)
+		res.send(products) //-- include user-added here
   	})
 })
 
@@ -169,6 +164,8 @@ router.post('/upload', async (req, res) => {
 		console.log(req.body, ' this is req.body');
 		console.log(req.session, ' req.session in post route')
 		const createdProduct = await Product.create(req.body);
+
+		// set owner based on logged in user
 
 		res.status(201).json({
 			success: true,
@@ -184,8 +181,11 @@ router.post('/upload', async (req, res) => {
 	}
 });
 
+
 // product info route ("show")
 router.get('/:productId', async (req,res,next) => {
+
+	// if it's on my db --
 	const product = await Product.findById(req.params.productId)
 	res.send({
 		brand:product.brand,
@@ -199,12 +199,18 @@ router.get('/:productId', async (req,res,next) => {
 	  	productColors: product.product_colors,
 	  	favorites: product.favorites
 	})
+
+	// else 
+	// get info from API and return it
+	
 })
 
 
 // favoriting/unfavoriting
 router.post('/fav/:productId', async (req, res, next) => {
 	console.log("hitting fav route");
+
+	// use req.query here to get category -- react will know it
 
 	const product = await Product.findOne({productId: req.params.productId})
 
@@ -268,12 +274,14 @@ router.post('/fav/:productId', async (req, res, next) => {
 
 })
 
-// product delete
+// product delete -- only user-added products, only let owner of that product delete
 
 // product update
 router.put('/:id', async (req, res) => {
 
 	try {
+		// add code to make sure it's correct user updating
+
 		const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, {new: true});
 		res.status(200).json({
 			success: true,

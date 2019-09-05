@@ -45,6 +45,7 @@ const corsOptions = {
 
 
 app.get('/', (req,res,next) => {
+	console.log(req.query);
 	console.log("GET Request");
 	res.json({
 		message: "You hit the GET / ROUTE"

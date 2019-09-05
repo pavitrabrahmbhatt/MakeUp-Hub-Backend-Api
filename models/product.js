@@ -20,7 +20,10 @@ const productSchema = new mongoose.Schema({
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'User' // use mongoose refs here https://mongoosejs.com/docs/populate.html
 	}]
-  	// added: ref User if added by user, null otherwise 
+  	// added: ref User if added by user, null otherwise -- "owner"
+
+  	// allows us to only let that user edit product
+  	// allows us to get only products manually added in home route
 
   	// category: enum https://mongoosejs.com/docs/schematypes.html#string-validators
 
