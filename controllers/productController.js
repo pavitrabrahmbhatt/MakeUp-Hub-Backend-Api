@@ -114,7 +114,8 @@ router.get('/vegan', async (req, res, next) => {
 		  	createdAt: product.created_at,
 		  	productColors: product.product_colors	  	
 		}))
-		userUploadedVegan = await Product.find({category:'vegan'}) // add productId == 0
+		userUploadedVegan = await Product.find({category:'vegan'}) 
+		// add productId == 0
 		products.push(userUploadedVegan)
 		res.send(products)
   	})
@@ -238,9 +239,9 @@ router.post('/fav/:productId/:id', async (req, res, next) => {
 
 	let product;
 
-	if (req.params.productId = 0){
+	if (req.params.productId == 0){
 		// findById
-		product = await Product.finById({productId: req.params.id})
+		product = await Product.findById(req.params.id)
 	} else {
 
 	// else
@@ -319,9 +320,10 @@ router.post('/fav/:productId/:id', async (req, res, next) => {
 router.get('/:productId/:id', async (req,res,next) => {
 
 	let product;
-	if (req.params.productId = 0){
+
+	if (req.params.productId == 0){
 		// findById
-		product = await Product.finById({productId: req.params.id})
+		product = await Product.findById(req.params.id)
 	} else {
 
 	// else
@@ -391,7 +393,7 @@ console.log("yo update");
 	try {
 		// STEP 4 -- add code to make sure it's correct user updating
 		const product = await Product.findById(req.params.id)
-		if(req.session.userId === product.userId) {
+		if(req.session.userId === product.owner) {
 			const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, {new: true});
 
 			res.status(200).json({
@@ -416,16 +418,26 @@ console.log("yo update");
 });
 
 router.delete("/:id", async (req, res, next) => {
-	try {
-		console.log("hitting delete route");
-		const product = await Product.findByIdAndDelete(req.params.id)
-		res.status(200).json({
-			success:true,
-			code:200,
-			meessage:"Product successfully deleted"
+	const product = await Product.findById(req.params.id)
+	if(req.session.userId === product.owner) {
+		try {
+			console.log("hitting delete route");
+			const product = await Product.findByIdAndDelete(req.params.id)
+			res.status(200).json({
+				success:true,
+				code:200,
+				meessage:"Product successfully deleted"
+			})
+		} catch(err) {
+			next(err)
+		}
+	} else {
+		res.status(500).json({
+			success:false,
+			code:500,
+			message: "Not your product",
+
 		})
-	} catch(err) {
-		next(err)
 	}
 })
 
