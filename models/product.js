@@ -7,20 +7,24 @@ const productSchema = new mongoose.Schema({
 	},
 	category: {
 		type: String,
-		// enum: ['Vegan','Drugstore','Luxury']
+		enum: ['vegan','drugstore','luxury']
 	},
 	name: String,
 	price: String,
 	imageLink: String,
 	description: String,
 	productId: String, // from api
-	createdAt: String,
+	createdAt: {type: Date, default: Date.now},
 	productColors: [],
 	favorites:[{
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'User' // use mongoose refs here https://mongoosejs.com/docs/populate.html
+	}],
+	owner: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "User"
 	}]
-  	// added: ref User if added by user, null otherwise -- "owner"
+  	// STEP 1: add this field added: ref User if added by user, null otherwise -- "owner"
 
   	// allows us to only let that user edit product
   	// allows us to get only products manually added in home route

@@ -14,6 +14,7 @@ router.get('/home', async (req, res, next) => {
 
 	// also get products from db that user has added
 
+
 	superagent
 	.get(url1)
 	.end((error, response) => {
@@ -45,7 +46,7 @@ router.get('/home', async (req, res, next) => {
 			}))
 			superagent
 			.get(url3)
-			.end((error, response) => {
+			.end(async (error, response) => {
 				const luxuryProducts = response.body.map(product => ({
 					brand:product.brand,
 				  	name: product.name,
@@ -59,8 +60,24 @@ router.get('/home', async (req, res, next) => {
 				}))
 				
 
-				// get user-added products from db
 
+				// get user-added products from db
+				userUploadedVegan = await Product.find({category:'vegan'}) // add productId == 0
+				
+				console.log(userUploadedVegan);
+				veganProducts.push(userUploadedVegan)
+
+				userUploadedDrugstore = Product.find({category:'drugstore'}) // add productId == 0
+				drugstoreProducts.push(userUploadedDrugstore)
+				console.log(userUploadedVegan);
+
+				userUploadedLuxury = Product.find({category:'luxury'}) // add productId == 0
+				luxuryProducts.push(userUploadedLuxury)
+				console.log(userUploadedVegan);
+
+				
+				console.log("check terminal");
+				// res.send('check terminal')
 				res.json([veganProducts, drugstoreProducts, luxuryProducts])
 				// {
 				// 	veganProducts: veganProducts, etc,
@@ -84,6 +101,9 @@ router.get('/vegan', (req, res, next) => {
 
 
 	// also get vegan user-added products from db
+// add productId == 0
+	// userUploadedVegan = Product.find({}).select({category:'vegan'})
+	// veganProducts.push(userUploadedVegan)
 
 	superagent
 	.get(url)
@@ -111,6 +131,9 @@ router.get('/drugstore', (req, res, next) => {
 	//use superagent to request api data
 
 	// also get user-added drugstore products from db
+	// userUploadedDrugstore = Product.find({category:drugstore})
+// add productId == 0
+	// drugstoreProducts.push(userUploadedDrugstore)
 
 	superagent
 	.get(url)
@@ -138,6 +161,10 @@ router.get('/luxury', (req, res, next) => {
 
 
 	// also get user-added luxury products from db
+// add productId == 0
+	// userUploadedLuxury = Product.find({category:luxury})
+	// luxuryProducts.push(userUploadedLuxury)
+
 	superagent
 	.get(url)
 	.end((error, response) => {
@@ -160,12 +187,35 @@ router.get('/luxury', (req, res, next) => {
 // product create route
 router.post('/upload', async (req, res) => {
 
-	try {
+	//try {
+
 		console.log(req.body, ' this is req.body');
 		console.log(req.session, ' req.session in post route')
-		const createdProduct = await Product.create(req.body);
 
-		// set owner based on logged in user
+		const createdProduct = new Product ({
+
+			brand:req.body.brand,
+			name:req.body.name,
+			price:req.body.price,
+			imageLink:req.body.imageLink,
+			description:req.body.description,
+			productId:req.body.productId,
+			category:req.body.category,
+			owner: req.session.userId
+
+		}) 
+
+		await createdProduct.save()
+
+
+		// const createdProduct = await Product.create(req.body);
+		// // console.log(req.body.owner)
+		// // console.log(req.body.favorites);;
+		
+
+		// // STEP 1 set owner based on logged in user
+		// owner = 
+		// make productId 0 -- indicate that it is user-created
 
 		res.status(201).json({
 			success: true,
@@ -173,36 +223,60 @@ router.post('/upload', async (req, res) => {
 			message: "Successfully created product",
 			data: createdProduct
 		});
-
-	} catch(err) {
-	    // res.status(500).json(
-			next(err)
-	    // )
-	}
 });
+	//} catch(err) {
+	    // res.status(500).json(
+			//next(err)
+	    // )
+	//}
+//});
 
 
 // product info route ("show")
 router.get('/:productId', async (req,res,next) => {
 
-	// if it's on my db --
-	const product = await Product.findById(req.params.productId)
-	res.send({
-		brand:product.brand,
-	  	name: product.name,
-	  	category: product.category,
-	  	price: product.price,
-	  	imageLink: product.image_link,
-	  	description: product.description,
-	  	productId: product.id,
-	  	createdAt: product.created_at,
-	  	productColors: product.product_colors,
-	  	favorites: product.favorites
-	})
+	const product = await Product.findOne({productId: req.params.productId})
 
-	// else 
+	// STEP 2: use req.query so that if you need to use the API data instead of db, you know which category it came from (i.e. where user clicked in react)
+
+	if(product){
+
+		// if it's on my db --
+		// const product = await Product.findById(req.params.productId)
+		res.send({
+			brand:product.brand,
+		  	name: product.name,
+		  	category: product.category,
+		  	price: product.price,
+		  	imageLink: product.image_link,
+		  	description: product.description,
+		  	productId: product.id,
+		  	createdAt: product.created_at,
+		  	productColors: product.product_colors,
+		  	favorites: product.favorites
+		})
+	} else {
+		const url = `https://makeup-api.herokuapp.com/api/v1/products/${req.params.productId}.json`
+			// add to db	
+		superagent
+		.get(url)
+		.end( async (error, response) => {
+			// console.log(response.body);
+			res.send({
+				brand:response.body.brand,
+			  	name: response.body.name,
+			  	// category: response.body.category, req.query.category
+			  	price: response.body.price,
+			  	imageLink: response.body.image_link,
+			  	description: response.body.description,
+			  	productId: response.body.id,
+			  	createdAt: response.body.created_at,
+			  	productColors: response.body.product_colors	  	
+			})
+		})
 	// get info from API and return it
-	
+
+	}
 })
 
 
@@ -210,7 +284,7 @@ router.get('/:productId', async (req,res,next) => {
 router.post('/fav/:productId', async (req, res, next) => {
 	console.log("hitting fav route");
 
-	// use req.query here to get category -- react will know it
+	// STEP 2: use req.query here to get category -- react will know it
 
 	const product = await Product.findOne({productId: req.params.productId})
 
@@ -274,15 +348,23 @@ router.post('/fav/:productId', async (req, res, next) => {
 
 })
 
+// stretch -- unfavoriting
+// if there are no more favs for this prod it can be deleted from DB?
+
 // product delete -- only user-added products, only let owner of that product delete
+// STEP 5 if user created it they can delete it, 
+
+
 
 // product update
 router.put('/:id', async (req, res) => {
 
 	try {
-		// add code to make sure it's correct user updating
+		// STEP 4 -- add code to make sure it's correct user updating
+
 
 		const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, {new: true});
+
 		res.status(200).json({
 			success: true,
 			code: 200,
@@ -295,7 +377,12 @@ router.put('/:id', async (req, res) => {
 	
 });
 
-// 
+// STEP 3 -- update get routes to integrate data correctly
 
 
 module.exports = router;
+
+
+
+
+
