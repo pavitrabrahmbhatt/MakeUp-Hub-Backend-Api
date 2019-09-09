@@ -35,13 +35,16 @@ app.use((req, res, next) => {
 	}
 })
 
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+
 const corsOptions = {
-	origin: 'http://localhost:3000/', // when deploy react app, this is where you put the address
+	origin: 'http://localhost:3001', // when deploy react app, this is where you put the address
 	credentials: true, 
 	optionsSuccessStatus: 200 
 }
 
-//app.use(cors(corsOptions));
+app.use(cors(corsOptions));
 
 
 app.get('/', (req,res,next) => {

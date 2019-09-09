@@ -114,7 +114,7 @@ router.get('/vegan', async (req, res, next) => {
 		  	createdAt: product.created_at,
 		  	productColors: product.product_colors	  	
 		}))
-		userUploadedVegan = await Product.find({category:'vegan'}) 
+		userUploadedVegan = await Product.find({category:'vegan',productId:'0'}) 
 		// add productId == 0
 		products.push(userUploadedVegan)
 		res.send(products)
@@ -141,7 +141,7 @@ router.get('/drugstore', (req, res, next) => {
 		  	createdAt: product.created_at,
 		  	productColors: product.product_colors	  	
 		}))
-		userUploadedDrugstore = await Product.find({category:'drugstore'})
+		userUploadedDrugstore = await Product.find({category:'drugstore', productId:'0'})
 		products.push(userUploadedDrugstore)
 		res.send(products)
   	})
@@ -174,7 +174,7 @@ router.get('/luxury', (req, res, next) => {
 		  	createdAt: product.created_at,
 		  	productColors: product.product_colors	  	
 		}))
-		userUploadedLuxury = Product.find({category:'luxury'}) // add productId == 0
+		userUploadedLuxury = Product.find({category:'luxury',productId:'0'}) // add productId == 0
 		products.push(userUploadedLuxury) //-- include user-added here
 		res.send(products)
   	})
