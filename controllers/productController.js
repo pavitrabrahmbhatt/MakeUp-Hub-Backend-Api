@@ -97,13 +97,12 @@ router.get('/vegan', async (req, res, next) => {
 	//use superagent to request api data
 	// also get vegan user-added products from db
 	
-	
 
 
 	superagent
 	.get(url)
 	.end(async (error, response) => {
-		const products = response.body.map(product => ({
+		let products = response.body.map(product => ({
 			brand:product.brand,
 		  	name: product.name,
 		  	category: 'vegan',
@@ -116,7 +115,10 @@ router.get('/vegan', async (req, res, next) => {
 		}))
 		userUploadedVegan = await Product.find({category:'vegan',productId:'0'}) 
 		// add productId == 0
-		products.push(userUploadedVegan)
+		console.log(userUploadedVegan);
+		console.log(products.length);
+		products = products.concat(userUploadedVegan)
+		console.log(products.length)
 		res.send(products)
   	})
 })
@@ -130,7 +132,7 @@ router.get('/drugstore', (req, res, next) => {
 	superagent
 	.get(url)
 	.end(async (error, response) => {
-		const products = response.body.map(product => ({
+		let products = response.body.map(product => ({
 			brand:product.brand,
 		  	name: product.name,
 		  	category: 'drugstore',
@@ -142,7 +144,7 @@ router.get('/drugstore', (req, res, next) => {
 		  	productColors: product.product_colors	  	
 		}))
 		userUploadedDrugstore = await Product.find({category:'drugstore', productId:'0'})
-		products.push(userUploadedDrugstore)
+		products = products.concat(userUploadedDrugstore)
 		res.send(products)
   	})
 })
@@ -163,7 +165,7 @@ router.get('/luxury', (req, res, next) => {
 	superagent
 	.get(url)
 	.end((error, response) => {
-		const products = response.body.map(product => ({
+		let products = response.body.map(product => ({
 			brand:product.brand,
 		  	name: product.name,
 		  	category: 'luxury',
@@ -175,7 +177,7 @@ router.get('/luxury', (req, res, next) => {
 		  	productColors: product.product_colors	  	
 		}))
 		userUploadedLuxury = Product.find({category:'luxury',productId:'0'}) // add productId == 0
-		products.push(userUploadedLuxury) //-- include user-added here
+		products = products.concat(userUploadedLuxury) //-- include user-added here
 		res.send(products)
   	})
 })
