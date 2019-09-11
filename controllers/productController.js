@@ -124,7 +124,7 @@ router.get('/vegan', async (req, res, next) => {
 })
  
 
-router.get('/drugstore', (req, res, next) => {
+router.get('/drugstore', async (req, res, next) => {
   
 	const url = 'http://makeup-api.herokuapp.com/api/v1/products.json?price_less_than=10'
 	
@@ -149,7 +149,8 @@ router.get('/drugstore', (req, res, next) => {
   	})
 })
 
-router.get('/luxury', (req, res, next) => {
+
+router.get('/luxury', async (req, res, next) => {
   
 	const url = 'http://makeup-api.herokuapp.com/api/v1/products.json?price_greater_than=20'
 	// console.log(url);
@@ -164,7 +165,7 @@ router.get('/luxury', (req, res, next) => {
 
 	superagent
 	.get(url)
-	.end((error, response) => {
+	.end(async (error, response) => {
 		let products = response.body.map(product => ({
 			brand:product.brand,
 		  	name: product.name,
@@ -176,7 +177,8 @@ router.get('/luxury', (req, res, next) => {
 		  	createdAt: product.created_at,
 		  	productColors: product.product_colors	  	
 		}))
-		userUploadedLuxury = Product.find({category:'luxury',productId:'0'}) // add productId == 0
+		userUploadedLuxury = await Product.find({category:'luxury',productId:'0'}) // add productId == 0
+		console.log(userUploadedLuxury);
 		products = products.concat(userUploadedLuxury) //-- include user-added here
 		res.send(products)
   	})
@@ -233,7 +235,7 @@ router.post('/upload', async (req, res) => {
 
 
 // favoriting/unfavoriting
-router.post('/fav/:productId/:id', async (req, res, next) => {
+router.get('/fav/:productId/:id', async (req, res, next) => {
 	console.log("hitting fav route");
 
 	// STEP 2: use req.query here to get category -- react will know it
@@ -265,7 +267,7 @@ router.post('/fav/:productId/:id', async (req, res, next) => {
 			superagent
 			.get(url)
 			.end( async (error, response) => {
-				// console.log(response.body);
+				console.log(response.body);
 				const product = {
 					brand:response.body.brand,
 				  	name: response.body.name,
@@ -349,7 +351,7 @@ router.get('/:productId/:id', async (req,res,next) => {
 		  	name: product.name,
 		  	category: product.category,
 		  	price: product.price,
-		  	imageLink: product.image_link,
+		  	imageLink: product.imageLink,
 		  	description: product.description,
 		  	productId: product.id,
 		  	createdAt: product.created_at,
@@ -372,7 +374,8 @@ router.get('/:productId/:id', async (req,res,next) => {
 			  	description: response.body.description,
 			  	productId: response.body.id,
 			  	createdAt: response.body.created_at,
-			  	productColors: response.body.product_colors	  	
+			  	productColors: response.body.product_colors,
+			  	favorites: []	  	
 			})
 		})
 	// get info from API and return it

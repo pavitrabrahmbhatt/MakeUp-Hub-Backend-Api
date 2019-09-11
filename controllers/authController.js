@@ -108,10 +108,11 @@ router.post('/register', async (req, res, next) => {
 
 });
 
-router.get('/:id', async (req, res, next) => {
+router.get('/', async (req, res, next) => {
 	console.log("hitting get info about user -- profile route");
      try  {
-		const foundUser = await User.findById(req.params.id);
+     	// 
+		const foundUser = await User.findById(req.session.userId).populate('favorites');
 		res.status(200).json({
 			success: true,
 			code: 200,
@@ -121,12 +122,7 @@ router.get('/:id', async (req, res, next) => {
 
       } catch (err){
       	next(err)
-		// res.status(500).json({
-		// 	success: false,
-		// 	code: 500,
-		// 	message: "Internal server error",
-		// 	error: err
-		// })
+
       }
 
 });
